@@ -6,7 +6,7 @@
     </div>
 
     <!-- Display success or error messages -->
-    @if(session()->has('success'))
+    @if(session('success'))
         <flux:badge color="lime">{{ session('success') }}</flux:badge>
     @endif
     @if($errors->any())
@@ -16,7 +16,7 @@
     <!-- Search and Add New Product Button -->
     <div class="flex justify-between items-center mb-4">
         <div>
-            <flux:input icon="magnifying-glass" placeholder="Search Products" />
+            <flux:input icon="magnifying-glass" placeholder="Search Products" name="search" value="{{ request('search') }}" />
         </div>
         <div>
             <flux:link href="{{ route('products.create') }}"
@@ -34,56 +34,67 @@
                     <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">ID</th>
                     <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Image</th>
                     <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Name</th>
-                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Description
-                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Category</th>
+                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Description</th>
+                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Stock</th>
                     <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Price</th>
-                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Actions
-                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Actions</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-                @foreach($products as $product)
+                @forelse($products as $product)
                     <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $product->id }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="px-6 py-4 text-sm text-gray-900">{{ $product->id }}</td>
+                        <td class="px-6 py-4">
                             @if($product->image)
                                 @php
                                     $isUrl = filter_var($product->image, FILTER_VALIDATE_URL);
                                 @endphp
-
                                 <img src="{{ $isUrl ? $product->image : Storage::url($product->image) }}"
-                                    alt="{{ $product->name }}" class="h-10 w-10 object-cover rounded">
+                                     alt="{{ $product->name }}"
+                                     class="h-10 w-10 object-cover rounded">
                             @else
                                 <div class="h-10 w-10 bg-gray-200 flex items-center justify-center rounded">
                                     <span class="text-gray-500 text-sm">N/A</span>
                                 </div>
                             @endif
                         </td>
-
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $product->name }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $product->description }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $product->price }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td class="px-6 py-4 text-sm text-gray-900">{{ $product->name }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">
+                            {{ $product->category ? $product->category->name : 'No Category' }}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-900">{{ $product->description }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">{{ $product->stock }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">{{ number_format($product->price, 0, ',', '.') }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">
                             <flux:dropdown>
                                 <flux:button icon:trailing="chevron-down">Actions</flux:button>
                                 <flux:menu>
-                                    <flux:menu.item icon="pencil" href="{{ route('products.edit', $product->id) }}">Edit
+                                    <flux:menu.item icon="pencil" href="{{ route('products.edit', $product->id) }}">
+                                        Edit
                                     </flux:menu.item>
                                     <flux:menu.item icon="trash" variant="danger"
-                                        onclick="event.preventDefault(); if(confirm('Are you sure you want to delete this category?')) document.getElementById('delete-form-{{ $product->id }}').submit();">
+                                        onclick="event.preventDefault(); if(confirm('Are you sure you want to delete this product?')) document.getElementById('delete-form-{{ $product->id }}').submit();">
                                         Delete
                                     </flux:menu.item>
-                                    <form id="delete-form-{{ $product->id }}"
-                                        action="{{ route('products.destroy', $product->id) }}" method="POST">
-                                        @csrf
-                                        @method('DELETE')
-                                    </form>
                                 </flux:menu>
                             </flux:dropdown>
+
+                            <form id="delete-form-{{ $product->id }}" action="{{ route('products.destroy', $product->id) }}"
+                                  method="POST" class="hidden">
+                                @csrf
+                                @method('DELETE')
+                            </form>
                         </td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="8" class="text-center text-gray-500 py-6">No products found.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
     </div>
+
+
 </x-layouts.app>
